@@ -1,73 +1,54 @@
-# React + TypeScript + Vite
+# React Query Toolkits
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Toolkit for wiring `@tanstack/react-query` with an Axios service layer. The goal is to share a reusable HTTP client, query client defaults, and helpers across React front-ends without forcing a specific framework.
 
-Currently, two official plugins are available:
+## Install
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+pnpm add @tanstack/react-query axios
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Copy the `src/lib` directory (or specific modules) into your project. The codebase expects TypeScript and modern bundlers (Vite, Next, etc.).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## What You Get
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+- `http/axios-client.ts`: Axios instance with refresh-token retry, request/response interceptors, and a token store.
+- `http/make-http.ts`: Thin wrappers for `GET`, `POST`, `PUT`, `PATCH`, `DELETE` to keep return types consistent.
+- `react-query/react-query.default.ts`: Shared cache + default options for queries and mutations.
+- `react-query/ReactQueryProvider.tsx`: Provider that composes the defaults into a `QueryClient`.
+- `react-query/query-key-factory.ts`: Helpers for building namespaced query keys.
+
+## How To Use
+
+1. **Configure HTTP layer**
+   - Update `BASE_URL` and `REFRESH_PATH` in `http/axios-client.ts` to match your backend.
+   - Wire your real refresh flow inside `refreshAccessToken` and the `tokenStore`.
+2. **Wrap your app**
+   ```tsx
+   import { ReactQueryProvider } from "@/lib/react-query";
+
+   export function App() {
+     return (
+       <ReactQueryProvider>
+         <YourChildElements />
+       </ReactQueryProvider>
+     );
+   }
+   ```
+3. **Call services with helpers**
+   ```ts
+   import { http, queryKey_namespace_builder } from "@/lib";
+
+   const todosKeys = queryKey_namespace_builder("todos");
+   export async function getTodos() {
+     return http.GET<Todo[]>("/todos");
+   }
+   ```
+
+## Customize Further
+
+- Override query cache behavior in `react-query/react-query.default.ts`.
+- Extend the HTTP helpers with adapters per backend response envelope.
+- Replace the in-memory token store if you need persistence.
+
+Use this repository as a starting point and adapt it to your project’s routing, auth, and UI conventions.
