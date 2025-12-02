@@ -1,4 +1,4 @@
-# React Query Toolkits
+# React Toolkits
 
 Toolkit for wiring `@tanstack/react-query` with an Axios service layer. The goal is to share a reusable HTTP client, query client defaults, and helpers across React front-ends without forcing a specific framework.
 
